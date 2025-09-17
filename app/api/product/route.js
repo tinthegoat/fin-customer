@@ -14,8 +14,10 @@ export async function POST(request) {
 
 export async function PUT(request) {
   const body = await request.json();
+  console.debug(body)
   const { _id, ...updateData } = body;
   const product = await Product.findByIdAndUpdate(_id, updateData, { new: true });
+  
   if (!product) {
     return new Response("Product not found", { status: 404 });
   }

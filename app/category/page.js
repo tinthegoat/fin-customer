@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
 import { DataGrid } from "@mui/x-data-grid";
+import Category from "@/models/Category";
 
 export default function Home() {
 
