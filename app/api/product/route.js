@@ -1,7 +1,8 @@
 import Product from "@/models/Product";
+import Category from "@/models/Category";
 
 export async function GET() {
-  return Response.json(await Product.find());
+  return Response.json(await Product.find().populate('category'));
 }
 
 export async function POST(request) {
@@ -17,7 +18,7 @@ export async function PUT(request) {
   console.debug(body)
   const { _id, ...updateData } = body;
   const product = await Product.findByIdAndUpdate(_id, updateData, { new: true });
-  
+
   if (!product) {
     return new Response("Product not found", { status: 404 });
   }

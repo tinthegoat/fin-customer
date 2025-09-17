@@ -7,16 +7,24 @@ import { DataGrid } from "@mui/x-data-grid";
 
 export default function Home() {
   const columns = [
-    // { field: 'id', headerName: 'ID', width: 90 },
+    { field: 'code', headerName: 'Code', width: 90 },
     { field: 'name', headerName: 'Name', width: 150 },
-    { field: 'order', headerName: 'Order', width: 150 },
+    { field: 'description', headerName: 'Description', width: 150 },
+    {
+      field: 'category',
+      headerName: 'Category',
+      width: 150,
+
+    },
+
+    { field: 'price', headerName: 'Price', width: 150 },
     {
       field: 'Action', headerName: 'Action', width: 150,
       renderCell: (params) => {
         return (
           <div>
             <button onClick={() => startEditMode(params.row)}>📝</button>
-            <button onClick={() => deleteCategory(params.row)}>🗑️</button>
+            <button onClick={() => deleteProduct(params.row)}>🗑️</button>
           </div>
         )
       }
@@ -29,7 +37,7 @@ export default function Home() {
   const { register, handleSubmit, reset } = useForm();
   const [products, setProducts] = useState([]);
   const [category, setCategory] = useState([]);
-  const [ProductList, setCategoryList] = useState([]);
+  const [ProductList, setProductList] = useState([]);
 
 
   async function fetchProducts() {
@@ -37,12 +45,16 @@ export default function Home() {
     // const data = await fetch(`http://localhost:3000/product`);
     const p = await data.json();
     const p2 = p.map((product) => {
-      return {
-        ...product,
-        id: product._id
+      if (!product) {
+        return null;
       }
-    })
-    setCategoryList(p2);
+      return {
+        ...product, // Ensure all product properties are spread
+        id: product._id,
+        category: product.category ? product.category.name : 'Uncategorized'
+      };
+    }).filter(Boolean);
+    setProductList(p2);
     setProducts(p);
   }
 
@@ -69,24 +81,25 @@ export default function Home() {
     }
 
     // Creating a new product
-
     fetch(`${API_BASE}/product`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
-    }).then(() => fetchProducts());
+    }).then(() => {
+      fetchProducts()
+    });
   };
 
-  const deleteById = (id) => async () => {
-    if (!confirm("Are you sure?")) return;
+  // const deleteById = (id) => async () => {
+  //   if (!confirm("Are you sure?")) return;
 
-    await fetch(`${API_BASE}/product/${id}`, {
-      method: "DELETE",
-    });
-    fetchProducts();
-  }
+  //   await fetch(`${API_BASE}/product/${id}`, {
+  //     method: "DELETE",
+  //   });
+  //   fetchProducts();
+  // }
 
   const startEditMode = (product) => {
     // console.log(product)
@@ -105,7 +118,7 @@ export default function Home() {
     });
   }
 
-  async function deleteCategory(product) {
+  async function deleteProduct(product) {
     if (!confirm(`Are you sure to delete [${product.name}]`)) return;
 
     const id = product._id
@@ -113,6 +126,7 @@ export default function Home() {
       method: "DELETE"
     })
     fetchProducts()
+    fetchCategory()
   }
 
   useEffect(() => {
@@ -154,7 +168,7 @@ export default function Home() {
             <div>Price:</div>
             <div>
               <input
-                name="name"
+                name="price"
                 type="number"
                 {...register("price", { required: true })}
                 className="border border-black w-full"
@@ -174,7 +188,7 @@ export default function Home() {
             </div>
             {editMode ?
               <>
-                              <input
+                <input
                   type="submit"
                   value="Update"
                   className="bg-blue-800 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
@@ -198,7 +212,7 @@ export default function Home() {
           </div>
         </form>
       </div>
-      <div className="border m-4 bg-slate-300 flex-1 w-64">
+      {/* <div className="border m-4 bg-slate-300 flex-1 w-64">
         <h1 className="text-2xl">Products ({products.length})</h1>
         <ul className="list-disc ml-8">
           {
@@ -213,7 +227,7 @@ export default function Home() {
               </li>
             ))}
         </ul>
-      </div>
+      </div> */}
 
       <div className="mx-4">
         <DataGrid

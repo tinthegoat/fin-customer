@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
 import { DataGrid } from "@mui/x-data-grid";
-import Category from "@/models/Category";
 
 export default function Home() {
 
@@ -14,13 +13,16 @@ export default function Home() {
     {
       field: 'Action', headerName: 'Action', width: 150,
       renderCell: (params) => {
-        return (
-          <div>
-            <button onClick={() => startEditMode(params.row)}>📝</button>
-            <button onClick={() => deleteCategory(params.row)}>🗑️</button>
-          </div>
-        )
+      if (!params.row) {
+        return null;
       }
+      return (
+        <div>
+          <button onClick={() => startEditMode(params.row)}>📝</button>
+          <button onClick={() => deleteCategory(params.row)}>🗑️</button>
+        </div>
+      );
+    }
     },
   ]
 
@@ -155,7 +157,7 @@ export default function Home() {
         />
       </div>
 
-      {/* <div className="ml-4">
+      <div className="ml-4">
         <h1 className="text-xl font-bold">Category ({categoryList.length})</h1>
         {categoryList.map((category) => (
           <div key={category._id} className="ml-4">
@@ -167,7 +169,7 @@ export default function Home() {
             </Link>
           </div>
         ))}
-      </div> */}
+      </div>
     </main>
   );
 }
