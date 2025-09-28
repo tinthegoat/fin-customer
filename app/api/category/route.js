@@ -8,7 +8,6 @@ export async function GET(request) {
     const size = parseInt(request.nextUrl.searchParams.get("size"), 3) || 3; // TODO fix this hard code
     // calculate startIndex based on pno and the new size
     const startIndex = (parseInt(pno, 10) - 1) * size;
-    
     const categories = await Category.find()
       .sort({ order: -1 })
       .skip(startIndex)

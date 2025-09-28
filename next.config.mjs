@@ -2,7 +2,7 @@
 const nextConfig = {
   experimental: {
     instrumentationHook: true,
-    basePath: '/app/stock',
+    basePath: '/stock',
   },
 };
 
