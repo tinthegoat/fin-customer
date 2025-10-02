@@ -1,18 +1,31 @@
-export default async function Home({ params }) {
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
-  console.log(process.env.NEXT_PUBLIC_API_URL)
+"use client";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 
-  const data = await fetch(`${API_BASE}/product/${params.id}`, { cache: "no-store" });
-  const product = await data.json();
-  console.log({ product, category: product.category });
-  // const id = params.id;
+export default function ProductDetailPage() {
+  const params = useParams();
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+  const [product, setProduct] = useState(null);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      const res = await fetch(`${API_BASE}/product`);
+      const data = await res.json();
+      const p = data.find((item) => item._id === params.id);
+      setProduct(p);
+    };
+    fetchProduct();
+  }, [params.id]);
+
+  if (!product) return <div>Loading...</div>;
+
   return (
     <div className="m-4">
-      <h1>Product</h1>
-      <p className="font-bold text-xl text-blue-800">{product.name}</p>
-      <p>{product.description}</p>
-      <p>{product.price} Baht</p>
-      <p>Category: {product.category.name}</p>
+      <h1 className="text-2xl font-bold">{product.name}</h1>
+      <p><strong>Code:</strong> {product.code}</p>
+      <p><strong>Description:</strong> {product.description}</p>
+      <p><strong>Price:</strong> ${product.price}</p>
+      <p><strong>Category:</strong> {product.category?.name}</p>
     </div>
   );
 }

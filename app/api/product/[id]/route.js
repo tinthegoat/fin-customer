@@ -1,14 +1,13 @@
 import Product from "@/models/Product";
+import { NextResponse } from "next/server";
 
 export async function GET(request, { params }) {
-  console.log(params)
-  const id = params._id;
-  const product = await Product.findById(id).populate("category");
-  console.log({ product });
-  return Response.json(product);
-}
-
-export async function DELETE(request, { params }) {
-  const id = params.id;
-  return Response.json(await Product.findByIdAndDelete(id));
+  try {
+    const { id } = params;
+    const product = await Product.findById(id);
+    if (!product) return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    return NextResponse.json(product);
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to fetch product" }, { status: 500 });
+  }
 }

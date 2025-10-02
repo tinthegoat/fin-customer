@@ -1,174 +1,130 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import Link from "next/link";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import Modal from "@mui/material/Modal";
+import IconButton from "@mui/material/IconButton";
+import AddBoxIcon from "@mui/icons-material/AddBox";
+import Button from "@mui/material/Button";
 
-export default function Home() {
+export default function CategoryPage() {
+  const [categories, setCategories] = useState([]);
+  const [open, setOpen] = useState(false);
 
-  const columns = [
-    // { field: 'id', headerName: 'ID', width: 90 },
-    { field: 'name', headerName: 'Name', width: 150 },
-    { field: 'order', headerName: 'Order', width: 150 },
-    {
-      field: 'Action', headerName: 'Action', width: 150,
-      renderCell: (params) => {
-      if (!params.row) {
-        return null;
-      }
-      return (
-        <div>
-          <button onClick={() => startEditMode(params.row)}>📝</button>
-          <button onClick={() => deleteCategory(params.row)}>🗑️</button>
-        </div>
-      );
+  const APIBASE = process.env.NEXT_PUBLIC_API_URL;
+
+  // fetch categories
+  async function fetchCategories() {
+    try {
+      const res = await fetch(`${APIBASE}/category`);
+      const data = await res.json();
+      const mapped = data.map((c) => ({ ...c, id: c._id }));
+      setCategories(mapped);
+    } catch (err) {
+      console.error("Fetch error:", err);
     }
-    },
-  ]
-
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
-  console.log(process.env.NEXT_PUBLIC_API_URL)
-
-  const [categoryList, setCategoryList] = useState([]);
-  const [editMode, setEditMode] = useState(false);
-  const { register, handleSubmit, reset } = useForm();
-
-  async function fetchCategory() {
-    const data = await fetch(`${API_BASE}/category`);
-    const c = await data.json();
-    const c2 = c.map((category) => {
-      return {
-        ...category,
-        id: category._id
-      }
-    })
-    setCategoryList(c2);
   }
 
   useEffect(() => {
-    fetchCategory();
+    fetchCategories();
   }, []);
 
-  function handleCategoryFormSubmit(data) {
-    if (editMode) {
-      // Updating a category
-      fetch(`${API_BASE}/category`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+  // form setup
+  const { register, handleSubmit, reset } = useForm();
+
+  async function handleFormSubmit(data) {
+    try {
+      await fetch(`${APIBASE}/category`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
-      }).then(() => {
-        stopEditMode();
-        fetchCategory()
       });
-      return
+      reset();
+      setOpen(false);
+      fetchCategories();
+    } catch (err) {
+      console.error("Submit error:", err);
     }
-
-    // Creating a new category
-    fetch(`${API_BASE}/category`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }).then(() => fetchCategory());
-
   }
 
-  function startEditMode(category) {
-    // console.log(category)
-    reset(category);
-    setEditMode(true);
-  }
-
-  function stopEditMode() {
-    reset({
-      name: '',
-      order: ''
-    })
-    setEditMode(false)
-  }
-
-  async function deleteCategory(category) {
-    if (!confirm(`Are you sure to delete [${category.name}]`)) return;
-
-    const id = category._id
-    await fetch(`${API_BASE}/category/${id}`, {
-      method: "DELETE"
-    })
-    fetchCategory()
-  }
+  const columns = [
+    { field: "name", headerName: "Category Name", flex: 1 },
+    { field: "order", headerName: "Order", width: 120 },
+  ];
 
   return (
-    <main>
-      <form onSubmit={handleSubmit(handleCategoryFormSubmit)}>
-        <div className="grid grid-cols-2 gap-4 w-fit m-4 border border-gray-800 p-2">
-          <div>Category name:</div>
-          <div>
-            <input
-              name="name"
-              type="text"
-              {...register("name", { required: true })}
-              className="border border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-            />
-          </div>
-
-          <div>Order:</div>
-          <div>
-            <input
-              name="order"
-              type="number"
-              {...register("order", { required: true })}
-              className="border border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-            />
-          </div>
-
-          <div className="col-span-2 text-right">
-            {editMode ?
-              <>
-                <input
-                  type="submit"
-                  className="italic bg-blue-800 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
-                  value="Update" />
-
-                {' '}
-                <button
-                  onClick={() => stopEditMode()}
-                  className=" italic bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-full"
-                >Cancel
-                </button>
-              </>
-              :
-              <input
-                type="submit"
-                value="Add"
-                className="w-20 italic bg-green-800 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full"
-              />
-            }
-          </div>
-        </div>
-      </form>
-
+    <main className="p-4">
       <div className="mx-4">
-        <DataGrid
-          rows={categoryList}
-          columns={columns}
-        />
-      </div>
+        <span>Category ({categories.length})</span>
+        <IconButton
+          aria-label="new-category"
+          color="secondary"
+          onClick={() => setOpen(true)}
+        >
+          <AddBoxIcon />
+        </IconButton>
 
-      <div className="ml-4">
-        <h1 className="text-xl font-bold">Category ({categoryList.length})</h1>
-        {categoryList.map((category) => (
-          <div key={category._id} className="ml-4">
-            ‣
-            <button onClick={() => startEditMode(category)} className="mr-2">📝</button>
-            <button onClick={() => deleteCategory(category)} className="mr-2">🗑️</button>
-            <Link href={`/product/category/${category._id}`} className="text-red-600">
-              {category.name} → {category.order}
-            </Link>
+        {/* Modal with form */}
+        <Modal open={open} onClose={() => setOpen(false)}>
+          <div className="flex items-center justify-center h-full">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-[400px]">
+              <form
+                onSubmit={handleSubmit(handleFormSubmit)}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium">
+                    Category Name
+                  </label>
+                  <input
+                    {...register("name", { required: true })}
+                    className="border border-gray-600 rounded-lg p-2 w-full"
+                    placeholder="Enter category name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium">Order</label>
+                  <input
+                    type="number"
+                    {...register("order", {
+                      required: true,
+                      valueAsNumber: true,
+                    })}
+                    className="border border-gray-600 rounded-lg p-2 w-full"
+                    placeholder="Enter order number"
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    color="secondary"
+                    onClick={() => setOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="contained" color="primary">
+                    Save
+                  </Button>
+                </div>
+              </form>
+            </div>
           </div>
-        ))}
+        </Modal>
+
+        {/* Grid */}
+        <div style={{ height: 400, marginTop: "1rem" }}>
+          <DataGrid
+            rows={categories}
+            columns={columns}
+            slots={{ toolbar: GridToolbar }}
+            autoHeight
+            disableRowSelectionOnClick
+          />
+        </div>
       </div>
     </main>
   );
